@@ -1,5 +1,30 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getDatabase, ref, get, push, child } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 document.addEventListener("DOMContentLoaded",()=>{
-    "use strict"
+    // Import the functions you need from the SDKs you need
+    
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+        apiKey: "AIzaSyDjHxgtgtneH1diEfipKn3rRKBHHGFxT7w",
+        authDomain: "burger-7d448.firebaseapp.com",
+        databaseURL: "https://burger-7d448-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "burger-7d448",
+        storageBucket: "burger-7d448.firebasestorage.app",
+        messagingSenderId: "1052813496084",
+        appId: "1:1052813496084:web:34c553e10b0fa28cabfc01",
+        measurementId: "G-ZLP69MHCB5"
+    };
+
+    // Initialize Firebase
+    // 2. Ініціалізація
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    
 
     const btnOpenModal = document.querySelector("#btnOpenModal");
     const modalBlock = document.querySelector("#modalBlock");
@@ -10,8 +35,31 @@ document.addEventListener("DOMContentLoaded",()=>{
     const nextButton = document.querySelector("#next");
     const sendButton = document.querySelector("#send");
 
-    
 
+    const getData=()=>{
+        formAnswers.textContent="LOAD";
+        
+        prevButton.classList.add('d-none');
+        nextButton.classList.add('d-none');
+        // 3. Отримання даних (аналог вашого коду)
+        const dbRef = ref(db);
+        get(child(dbRef, "questions"))
+            .then((snapshot) => {
+            if (snapshot.exists()) {
+                playTest(snapshot.val()); // Ось ваші дані у форматі JSON/Object
+            } else {
+                console.log("No data available");
+            }
+            })
+            .catch((error) => {
+            formAnswers.textContent="Помилка завантаження даних!"
+            console.error(error);
+            });
+                
+        
+        
+    }
+/*
     const questions = [
         {
             question: "Якого кольору бургер?",
@@ -86,11 +134,10 @@ document.addEventListener("DOMContentLoaded",()=>{
             type: 'radio'
         }
     ];
-
+*/
     btnOpenModal.addEventListener("click",()=>{
         modalBlock.classList.add('d-block');
-        playTest();
-        
+        getData();
     })
 
     closeModal.addEventListener("click",()=>{
@@ -98,17 +145,12 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     })
 
-    const playTest = ()=> {
+    const playTest = (questions)=> {
         
         const finalAnswers=[];
 
         let numberQuestion=0;
-/*
-        const renderButtons= ()=>{
-            prevButton.style.display = numberQuestion === 0 ? 'none' : 'inline-block';
-            nextButton.style.display = numberQuestion === questions.length - 1 ? 'none' : 'inline-block';
-        }
-*/
+
         const renderAnswers= (index)=>{
             questions[index].answers.forEach((answer)=>{
                 const answerItem = document.createElement('div');
@@ -176,43 +218,7 @@ document.addEventListener("DOMContentLoaded",()=>{
                     }, 2000);
                     break;
             }
-            /*
-            if(numberQuestion>=0&&numberQuestion<=questions.length-1){
-                questionTitle.textContent=`${questions[indexQuestion].question}`;
-                renderAnswers(indexQuestion);
-
-                nextButton.classList.remove('d-none');
-                prevButton.classList.remove('d-none');
-            }
-            if(numberQuestion===0){
-                prevButton.classList.add('d-none');
-                sendButton.classList.add('d-none');
-            }
-            if(numberQuestion===questions.length){
-                questionTitle.textContent='';
-                nextButton.classList.add('d-none');
-                prevButton.classList.add('d-none');
-                sendButton.classList.remove('d-none');
-
-                formAnswers.innerHTML=
-                `
-                <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="NumberPhone">Ведіть номер телефону</span>
-                    <input type="text" id="NumberPhone" class="form-control" placeholder="Ведіть номер телефону.." aria-label="Username" aria-describedby="addon-wrapping">
-                </div>
-                `
-            }
-            if(numberQuestion===questions.length+1){
-                formAnswers.innerHTML=
-                `
-                Дякуємо за замовлення! Менеджер вам зателефонує.
-                `
-                setTimeout(()=>{
-                    modalBlock.classList.remove('d-block');
-                },2000)
-            }*/
             
-            //renderButtons();
         }
         renderQuestions(numberQuestion);
 
@@ -248,6 +254,16 @@ document.addEventListener("DOMContentLoaded",()=>{
             checkAnswers();
             numberQuestion++;
             renderQuestions(numberQuestion);
+            const contactsRef = ref(db, 'contacts');
+
+            // 3. Генеруємо новий ключ (push) і зберігаємо туди дані
+            push(contactsRef, finalAnswers)
+            .then(() => {
+                console.log("Дані успішно збережені!");
+            })
+            .catch((error) => {
+                console.error("Помилка запису:", error);
+            });
             console.log(finalAnswers);
         }
     }
